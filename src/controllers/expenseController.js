@@ -23,8 +23,13 @@ export const fetchExpensesAndPrice = async (req, res) => {
     }
 
     const totalExpenses = transactionRecord.transactions.reduce((total, tx) => {
-      const gasCost = (parseFloat(tx.gasUsed) * parseFloat(tx.gasPrice)) / 1e18;
-      return total + gasCost;
+      if (tx.from.toLowerCase() === address.toLowerCase()) {
+        const value = parseFloat(tx.value) / 1e18;
+        const gasCost =
+          (parseFloat(tx.gasUsed) * parseFloat(tx.gasPrice)) / 1e18;
+        return total + value + gasCost;
+      }
+      return total;
     }, 0);
 
     res.json({ totalExpenses, currentETHPrice });
