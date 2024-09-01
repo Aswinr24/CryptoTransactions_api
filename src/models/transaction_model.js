@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from 'mongoose';
 
 const transactionSchema = new mongoose.Schema({
   address: { type: String, required: true },
@@ -13,7 +13,7 @@ const transactionSchema = new mongoose.Schema({
       gasPrice: { type: String, required: true },
     },
   ],
-})
-const Transaction = mongoose.model('Transaction', transactionSchema)
+});
+const Transaction = mongoose.model('Transaction', transactionSchema);
 
-export { Transaction }
+export { Transaction };
