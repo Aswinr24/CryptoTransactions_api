@@ -3,20 +3,26 @@ import axios from 'axios'
 import express from 'express'
 import { Transaction } from './models/transaction_model.js'
 import { connectToDatabase } from './db.js'
+import { fetchPrice } from './services/priceService.js'
+import { Price } from './models/price_model.js'
 
 dotenv.config()
+
 const app = express()
+
 app.use(express.json())
+
 const port = process.env.PORT || 8080
 const apiKey = process.env.ETHERSCAN_API_KEY
-connectToDatabase()
 
-app.get('/', async (req, res) => {
+connectToDatabase()
+setInterval(fetchPrice, 10 * 60 * 1000)
+
+app.get('/transactions', async (req, res) => {
   const address = req.body.address
   if (!address) {
     return res.status(400).json({ error: 'Ethereum Address is required' })
   }
-
   const url = 'https://api.etherscan.io/api'
   const params = {
     module: 'account',
@@ -42,7 +48,6 @@ app.get('/', async (req, res) => {
       timestamp: String(tx.timeStamp),
     }))
 
-    console.log(`Fetched transactions for address ${address}:`, transactions)
     let transactionRecord = await Transaction.findOne({ address })
     if (transactionRecord) {
       const existingHashes = new Set(
@@ -69,6 +74,38 @@ app.get('/', async (req, res) => {
   }
 })
 
+app.get('/expenses', async (req, res) => {
+  const address = req.body.address
+  if (!address) {
+    return res.status(400).json({ error: 'Ethereum Address is required' })
+  }
+  try {
+    const latestPriceRecord = await Price.findOne().sort({ timestamp: -1 })
+    if (!latestPriceRecord) {
+      return res.status(500).json({ error: 'Unable to fetch Ethereum price' })
+    }
+    const currentETHPrice = latestPriceRecord.price
+
+    let transactionRecord = await Transaction.findOne({ address })
+    if (!transactionRecord) {
+      return res
+        .status(404)
+        .json({ error: 'No transactions found for this address' })
+    }
+
+    const totalExpenses = transactionRecord.transactions.reduce((total, tx) => {
+      const value = parseFloat(tx.value) / 1e18
+      const gasCost = (parseFloat(tx.gasUsed) * parseFloat(tx.gasPrice)) / 1e18
+      return total + value + gasCost
+    }, 0)
+
+    res.json({ totalExpenses, currentETHPrice })
+  } catch (error) {
+    console.error('Error fetching expenses and price:', error.message)
+    res.status(500).json({ error: 'Failed to fetch expenses and price' })
+  }
+})
+
 app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`)
+  console.log(`Server running on Port:${port}`)
 })
