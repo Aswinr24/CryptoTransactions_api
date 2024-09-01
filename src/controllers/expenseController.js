@@ -3,7 +3,7 @@ import { Price } from '../models/price_model.js';
 import { logger } from '../utils/logger.js';
 
 export const fetchExpensesAndPrice = async (req, res) => {
-  const address = req.body.address;
+  const address = req.query.address || req.body.address;
   if (!address) {
     return res.status(400).json({ error: 'Ethereum Address is required' });
   }
