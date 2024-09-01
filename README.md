@@ -1,4 +1,8 @@
-# Get Ethereum Transactions
+# Crypto Transactions API
+
+This API provides endpoints to retrieve Ethereum transaction data and calculate total expenses for a given Ethereum address. It leverages Etherscan's API to fetch transaction details and performs calculations to give users insights into their expenses.
+
+
 
 **Endpoint:** `/api/transactions`
 
