@@ -5,7 +5,7 @@ import { logger } from '../utils/logger.js';
 const apiKey = process.env.ETHERSCAN_API_KEY;
 
 export const fetchAndStoreTransactions = async (req, res) => {
-  const address = req.body.address;
+  const address = req.query.address || req.body.address;
   if (!address) {
     return res.status(400).json({ error: 'Ethereum Address is required' });
   }
